@@ -1,0 +1,69 @@
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+
+using namespace std;
+
+int main() {
+    // Define the airfoil parameters (NACA 4-digit series)
+    string airfoil = "0012"; // Change this to the desired NACA code
+
+    // Define XFOIL input and output file names
+    string inputFileName = "D:\\Elins\\Programming\\TugasAkhir\\VSCode\\output\\xfoil_input.txt";
+    string outputFileName = "D:\\Elins\\Programming\\TugasAkhir\\VSCode\\output\\xfoil_output.txt";
+
+    // Set the range of angles of attack to investigate
+    double alphaStart = 0.0;   // Starting angle of attack
+    double alphaEnd = 20.0;    // Ending angle of attack
+    double alphaStep = 1.0;    // Angle of attack step size
+
+    // Create XFOIL input file
+    ofstream inputFile(inputFileName);
+
+    // Write XFOIL commands to input file
+    inputFile << "naca " << airfoil << "\n";
+    inputFile << ".PLOP\n";
+    inputFile << "G\n";
+    inputFile << "PPAR\n";
+    inputFile << "N 100\n"; // Number of panels
+    inputFile << "\n"; // Blank line to end PPAR
+    inputFile << "OPER\n";
+    inputFile << "VISC 1E6\n"; // Set viscosity
+    inputFile << "ITER 200\n"; // Set number of iterations
+    inputFile << "ALFA " << alphaStart << " " << alphaEnd << " " << alphaStep << "\n"; // Set range of angles of attack
+    inputFile << "ASEQ\n";
+    inputFile << "QUIT\n";
+
+    // Close the input file
+    inputFile.close();
+
+    // Run XFOIL using the input file
+    string xfoilCommand = "\"D:\\Elins\\Programming\\TugasAkhir\\VSCode\\output\\xfoil.exe\" < " + inputFileName + " > " + outputFileName;
+    system(xfoilCommand.c_str());
+
+    // Read the XFOIL output file to find the maximum lift coefficient
+    ifstream outputFile(outputFileName);
+    string line;
+    double maxCl = 0.0;
+
+    while (getline(outputFile, line)) {
+        if (line.find("CLmax") != string::npos) {
+            size_t pos = line.find_last_of(" ");
+            maxCl = stod(line.substr(pos + 1));
+            break;
+        }
+    }
+
+    // Close the output file
+    outputFile.close();
+
+    // Print the maximum lift coefficient
+    cout << "Maximum Lift Coefficient (CLmax) for NACA " << airfoil << ": " << maxCl << endl;
+
+    // Remove temporary input and output files
+    //remove(inputFileName.c_str());
+    //remove(outputFileName.c_str());
+
+    system ("pause");
+    return 0;
+}
